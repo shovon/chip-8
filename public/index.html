@@ -4,10 +4,56 @@
   <head>
     <meta charset='utf-8'>
     <title>Chip 8 Emulator</title>
+    <style>
+    body {
+      font-family: Menlo, monospace;
+    }
+    .game-area {
+      margin: 20px auto;
+      width: 768px;
+    }
+    .buttons {
+      width: 768px;
+      display: grid;
+      grid-template-columns: auto auto auto auto;
+      grid-gap: 10px;
+    }
+
+    .buttons button {
+      display: block;
+      border: 2px solid #333;
+      padding: 20px;
+      font-size: 1.5em;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.125);
+    }
+    </style>
   </head>
   <body>
-    <div id='canvas-area'></div>
-
+    <div class='game-area'>
+      <div id='canvas-area'></div>
+      <div class='buttons'>
+        <button>1 <sup>1</sup></button>
+        <button>2 <sup>2</sup></button>
+        <button>3 <sup>3</sup></button>
+        <button>c <sup>4</sup></button>
+        <button>4 <sup>q</sup></button>
+        <button>5 <sup>w</sup></button>
+        <button>6 <sup>e</sup></button>
+        <button>d <sup>r</sup></button>
+        <button>7 <sup>a</sup></button>
+        <button>8 <sup>s</sup></button>
+        <button>9 <sup>d</sup></button>
+        <button>e <sup>f</sup></button>
+        <button>a <sup>z</sup></button>
+        <button>0 <sup>x</sup></button>
+        <button>b <sup>c</sup></button>
+        <button>f <sup>v</sup></button>
+      </div>
+    </div>
+    <script src='./almond.js'></script>
     <script src='./bundle.js'></script>
+    <script>require([ 'index' ]);</script>
   </body>
 </html>

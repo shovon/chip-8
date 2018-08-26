@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2018",
+    "module": "amd",
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
