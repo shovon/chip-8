@@ -7,7 +7,7 @@ type KeyboardButton =
 
 interface IKeyboard {
   getKeyboardState: () => KeyboardButton | null;
-  getNextKeyboardPress: () => Promise<KeyboardButton | null>;
+  getNextKeyboardPress: () => Promise<KeyboardButton>;
 };
 
 interface IDisposable {
@@ -73,7 +73,7 @@ class Keyboard implements IDisposable, IKeyboard {
     return this.pressedKey;
   }
 
-  public getNextKeyboardPress() {
+  public getNextKeyboardPress(): Promise<KeyboardButton> {
     return new Promise<KeyboardButton>(resolve => {
       this.keypressListeners = this.keypressListeners.concat([
         code => { resolve(code); }
@@ -481,18 +481,57 @@ class Chip8 implements IDisposable {
   }
 };
 
+const PIXEL_SIDE_LENGTH = 2;
+
 const keyboard = new Keyboard();
 const cpu = new Chip8(keyboard);
 
 const canvas = document.createElement('canvas');
+canvas.width = CHIP8_DISPLAY_WIDTH * PIXEL_SIDE_LENGTH;
+canvas.width = CHIP8_DISPLAY_HEIGHT * PIXEL_SIDE_LENGTH;
 const canvasContext = canvas.getContext('2d');
 
 const canvasArea = document.getElementById('canvas-area');
 
 const chip8Speed = 1000 / 500;
 
+const drawCanvas = (
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  display: boolean[]
+) => {
+  context.fillStyle = 'rgba(0, 0, 0, 1)';
+  context.fillRect(0, 0, width, height);
+
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const i = x + width * y;
+      
+      context.fillStyle = 'rgba(255, 255, 255, 1)';
+      const pixelWidth = (context.canvas.clientWidth / width);
+      const pixelHeight = (context.canvas.clientHeight / height);
+      context.fillRect(
+        x * pixelWidth,
+        y * pixelHeight,
+        pixelWidth,
+        pixelHeight
+      );
+    }
+  }
+};
+
 const run = async () => {
+  if (canvasContext === null) {
+    throw new Error('Canvas context is null');
+  }
   await cpu.runNext();
+  drawCanvas(
+    canvasContext,
+    CHIP8_DISPLAY_WIDTH,
+    CHIP8_DISPLAY_HEIGHT,
+    cpu.getDisplay()
+  );
   setTimeout(() => {
     run().catch(e => { console.error(e); });
   }, chip8Speed);
@@ -501,8 +540,13 @@ const run = async () => {
 if (canvasArea !== null && canvasContext !== null) {
   canvasArea.appendChild(canvas);
 
-  run()
-    .catch(e => { console.error(e); });
+  drawCanvas(
+    canvasContext,
+    CHIP8_DISPLAY_WIDTH,
+    CHIP8_DISPLAY_HEIGHT,
+    cpu.getDisplay()
+  );
+  run().catch(e => { console.error(e); });
 } else {
   throw new Error('The canvas area was not defined');
 }
