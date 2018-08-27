@@ -1,29 +1,63 @@
-import Keyboard from './keyboard';
+import Keyboard, { IKeyboard } from './keyboard';
+import { IDisposable } from './i-disposable';
 import Chip8 from './chip-8';
 import {
   CHIP8_DISPLAY_WIDTH,
   CHIP8_DISPLAY_HEIGHT
 } from './constants';
+import VisualKeyboardButtons from './visual-keyboard-buttons';
 
-let play = true;
+class MultiKeyboardSource implements IKeyboard {
+  private sources: IKeyboard[];
+
+  constructor(...sources: IKeyboard[]) {
+    this.sources = sources;
+  }
+
+  getKeyboardState() {
+    return  this.sources
+      .map(source => source.getKeyboardState())
+      .find(state => !!state) || null;
+  }
+
+  getNextKeyboardPress() {
+    return Promise.race(
+      this.sources.map(source => source.getNextKeyboardPress())
+    );
+  }
+}
 
 const PIXEL_SIDE_LENGTH = 12;
 
+const buttonsArea = document.getElementById('buttons-area');
+// TODO find a better way.
+if (buttonsArea === null) {
+  throw new Error('Buttons area not defined');
+}
+
 const keyboard = new Keyboard();
-const cpu = new Chip8(keyboard);
+const visualKeyboard = new VisualKeyboardButtons(buttonsArea);
+
+const multiKeyboard = new MultiKeyboardSource(
+  keyboard,
+  visualKeyboard
+);
+
+const cpu = new Chip8(multiKeyboard);
 
 const canvas = document.createElement('canvas');
 canvas.width = CHIP8_DISPLAY_WIDTH * PIXEL_SIDE_LENGTH;
 canvas.height = CHIP8_DISPLAY_HEIGHT * PIXEL_SIDE_LENGTH;
+
 const canvasContext = canvas.getContext('2d');
 
 const canvasArea = document.getElementById('canvas-area');
 
 const chip8Speed = 1000 / 500;
 
-const backgroundColor = '#fffeea';
-const foregroundColor = 'black';
-const blockStrokeColor = '#fffeea';
+const backgroundColor = 'black';
+const foregroundColor = 'white';
+const blockStrokeColor = 'black';
 
 const drawCanvas = (
   context: CanvasRenderingContext2D,
@@ -66,15 +100,13 @@ const run = async () => {
   if (canvasContext === null) {
     throw new Error('Canvas context is null');
   }
-  if (play) {
-    await cpu.runNext();
-    drawCanvas(
-      canvasContext,
-      CHIP8_DISPLAY_WIDTH,
-      CHIP8_DISPLAY_HEIGHT,
-      cpu.getDisplay()
-    );
-  }
+  await cpu.runNext();
+  drawCanvas(
+    canvasContext,
+    CHIP8_DISPLAY_WIDTH,
+    CHIP8_DISPLAY_HEIGHT,
+    cpu.getDisplay()
+  );
   setTimeout(() => {
     run().catch(e => { console.error(e); });
   }, chip8Speed);

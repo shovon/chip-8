@@ -5,36 +5,57 @@
     <meta charset='utf-8'>
     <title>Chip 8 Emulator</title>
     <style>
+    html {
+      background: black;
+    }
     body {
       font-family: Menlo, monospace;
     }
     .game-area {
-      margin: 20px auto;
+      margin: 50px auto;
       width: 768px;
     }
     .buttons {
+      margin-top: 20px;
       width: 768px;
       display: grid;
       grid-template-columns: auto auto auto auto;
-      grid-gap: 10px;
+      grid-gap: 15px;
     }
-
     .buttons button {
+      color: white;
+      background: transparent;
       display: block;
-      border: 2px solid #333;
+      border: 2px solid white;
       padding: 20px;
       font-size: 1.5em;
       cursor: pointer;
       text-transform: uppercase;
-      box-shadow: 5px 5px 0 0 rgba(0, 0, 0, 0.125);
+      box-shadow: 5px 5px 0 0 rgba(255, 255, 255, 0.25);
+      outline: none;
+    }
+
+    .buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 5px 7px 0 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .buttons button:active,
+    .buttons button.active {
+      transform: translateY(5px);
+      box-shadow: 5px 0px 0 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .buttons button sup {
+      opacity: 0.5;
     }
     </style>
   </head>
   <body>
     <div class='game-area'>
-      <div id='canvas-area'></div>
-      <div class='buttons'>
-        <button>1 <sup>1</sup></button>
+      <div class='canvas-area' id='canvas-area'></div>
+      <div id='buttons-area' class='buttons'>
+        <!-- <button>1 <sup>1</sup></button>
         <button>2 <sup>2</sup></button>
         <button>3 <sup>3</sup></button>
         <button>c <sup>4</sup></button>
@@ -49,7 +70,7 @@
         <button>a <sup>z</sup></button>
         <button>0 <sup>x</sup></button>
         <button>b <sup>c</sup></button>
-        <button>f <sup>v</sup></button>
+        <button>f <sup>v</sup></button> -->
       </div>
     </div>
     <script src='./almond.js'></script>
