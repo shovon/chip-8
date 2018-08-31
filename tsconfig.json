@@ -9,6 +9,8 @@
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
     "outFile": "./public/bundle.js",
-    "sourceMap": true
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "jsx": "react"
   }
 }

@@ -19,7 +19,7 @@ export default class Chip8 implements IDisposable {
   private SP: number;
   private stack: Uint16Array;
   private display: Array<boolean>;
-  private timersInterval: number;
+  private timersInterval: NodeJS.Timer;
   private cleared: boolean;
 
   constructor(private keyboard: IKeyboard) {
@@ -196,9 +196,7 @@ export default class Chip8 implements IDisposable {
 
   public async runNext() {
     if (this.cleared) {
-      throw new Error(
-        'The CPU has been disposed, and thus, nothing can be run'
-      );
+      return;
     }
 
     if (this.PC < 0 || this.PC >= CHIP8_MEMORY_SIZE) {
