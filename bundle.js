@@ -89,6 +89,45 @@ define("keyboard", ["require", "exports", "read-only-map"], function (require, e
 define("chip-8", ["require", "exports", "constants"], function (require, exports, constants_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    // TODO: this should be more general purpose than just an oscillator.
+    class SquareOscillatorPlayer {
+        /**
+         * Initializes a new instance of AudioScheduledSourceNodeManager.
+         * @param audioNode The AudioScheduledSourceNode to manage. Note: when having
+         *   initialized it, you must not have called `.start()` on it.
+         */
+        constructor(audioContext) {
+            this.audioContext = audioContext;
+            this.disposed = false;
+            this.oscilatorNode = null;
+        }
+        idempotentStart() {
+            if (this.disposed) {
+                return;
+            }
+            if (this.oscilatorNode === null) {
+                this.oscilatorNode = this.audioContext.createOscillator();
+                this.oscilatorNode.type = 'square';
+                this.oscilatorNode.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                this.oscilatorNode.connect(this.audioContext.destination);
+                this.oscilatorNode.start();
+            }
+        }
+        idempotentStop() {
+            if (this.oscilatorNode !== null) {
+                this.oscilatorNode.stop();
+                this.oscilatorNode.disconnect();
+                this.oscilatorNode = null;
+            }
+        }
+        dispose() {
+            if (this.disposed) {
+                return;
+            }
+            this.idempotentStop();
+            this.disposed = true;
+        }
+    }
     class Chip8 {
         constructor(keyboard) {
             this.keyboard = keyboard;
@@ -215,6 +254,8 @@ define("chip-8", ["require", "exports", "constants"], function (require, exports
                 }
             }, Math.floor(1000 / 120));
             this.cleared = false;
+            this.audioContext = new AudioContext();
+            this.audioNodeManager = new SquareOscillatorPlayer(this.audioContext);
         }
         loadProgram(program) {
             this.memory.set(program, constants_1.CHIP8_PROGRAM_MEMORY_LOCATION);
@@ -222,6 +263,8 @@ define("chip-8", ["require", "exports", "constants"], function (require, exports
         dispose() {
             clearInterval(this.timersInterval);
             this.cleared = true;
+            this.audioNodeManager.dispose();
+            this.audioContext.close();
         }
         getDisplay() {
             return this.display.slice();
@@ -556,6 +599,12 @@ define("chip-8", ["require", "exports", "constants"], function (require, exports
                     }
                     ;
                     break;
+            }
+            if (this.st > 0) {
+                this.audioNodeManager.idempotentStart();
+            }
+            else {
+                this.audioNodeManager.idempotentStop();
             }
         }
         getMemoryDump() {
