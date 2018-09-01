@@ -9,6 +9,50 @@ import {
 } from './constants';
 import { IKeyboard } from './keyboard';
 
+// TODO: this should be more general purpose than just an oscillator.
+class SquareOscillatorPlayer implements IDisposable {
+  private disposed: boolean;
+  private oscilatorNode: OscillatorNode | null;
+
+  /**
+   * Initializes a new instance of AudioScheduledSourceNodeManager.
+   * @param audioNode The AudioScheduledSourceNode to manage. Note: when having
+   *   initialized it, you must not have called `.start()` on it.
+   */
+  constructor(private audioContext: AudioContext) {
+    this.disposed = false;
+    this.oscilatorNode = null;
+  }
+
+  idempotentStart() {
+    if (this.disposed) { return; }
+    if (this.oscilatorNode === null) {
+      this.oscilatorNode = this.audioContext.createOscillator();
+      this.oscilatorNode.type = 'square';
+      this.oscilatorNode.frequency.setValueAtTime(
+        440,
+        this.audioContext.currentTime
+      );
+      this.oscilatorNode.connect(this.audioContext.destination);
+      this.oscilatorNode.start();
+    }
+  }
+
+  idempotentStop() {
+    if (this.oscilatorNode !== null) {
+      this.oscilatorNode.stop();
+      this.oscilatorNode.disconnect();
+      this.oscilatorNode = null;
+    }
+  }
+
+  dispose() {
+    if (this.disposed) { return; }
+    this.idempotentStop();
+    this.disposed = true;
+  }
+}
+
 export default class Chip8 implements IDisposable {
   private memory: Uint8Array;
   private V: Uint8Array;
@@ -21,6 +65,8 @@ export default class Chip8 implements IDisposable {
   private display: Array<boolean>;
   private timersInterval: NodeJS.Timer;
   private cleared: boolean;
+  private audioContext: AudioContext;
+  private audioNodeManager: SquareOscillatorPlayer;
 
   constructor(private keyboard: IKeyboard) {
     this.memory = new Uint8Array(CHIP8_MEMORY_SIZE);
@@ -166,6 +212,9 @@ export default class Chip8 implements IDisposable {
     }, Math.floor(1000 / 120));
 
     this.cleared = false;
+
+    this.audioContext = new AudioContext();
+    this.audioNodeManager = new SquareOscillatorPlayer(this.audioContext);
   }
 
   public loadProgram(program: Uint8Array) {
@@ -175,6 +224,8 @@ export default class Chip8 implements IDisposable {
   public dispose() {
     clearInterval(this.timersInterval);
     this.cleared = true;
+    this.audioNodeManager.dispose();
+    this.audioContext.close();
   }
 
   public getDisplay() {
@@ -408,6 +459,12 @@ export default class Chip8 implements IDisposable {
           }; break;
         }
       }; break;
+    }
+
+    if (this.st > 0) {
+      this.audioNodeManager.idempotentStart();
+    } else {
+      this.audioNodeManager.idempotentStop();
     }
   }
 
