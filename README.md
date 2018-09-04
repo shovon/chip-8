@@ -10,7 +10,7 @@ You'll only need to install Node.js.
 
 - From this project's root, run `npm i` (installs dependencies)
 - Run `./node_modules/.bin/tsc` (compiles the TypeScript code)
-- Install any web server. I like to use nws, and to install it run the command `npm i -g nws`
+- Install any web server. I like to use nws. To install it, run the command `npm i -g nws`
 
 ## License
 
